@@ -18,6 +18,7 @@ All notable changes to this project will be documented in this file.
 - API `POST /api/redirect-monitor/jobs` now accepts URL mode or sitemap mode.
 - Web dashboard now allows choosing target mode (URL, sitemap URL, sitemap file).
 - CLI monitor now supports `--sitemap-url` and `--sitemap-file`.
+- Log viewer events table now shows source URL and loaded/final URL in separate columns.
 
 ### Fixed
 - Timeline/latency chart hover no longer scales points, improving click stability.

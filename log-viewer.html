@@ -372,10 +372,12 @@
               <th>Intento</th>
               <th>Hora</th>
               <th>Tipo</th>
+              <th>URL origen</th>
+              <th>URL cargada/final</th>
               <th>Estado final</th>
               <th>301</th>
               <th>Cache HIT</th>
-              <th>URL final / Error</th>
+              <th>Error</th>
             </tr>
           </thead>
           <tbody id="rows"></tbody>
@@ -867,15 +869,19 @@
         const tr = document.createElement('tr');
         tr.className = 'data-row' + (i === state.selectedIndex ? ' selected' : '');
         tr.addEventListener('click', () => selectIndex(i));
+        const sourceUrl = entry.raw.targetUrl || entry.raw.startUrl || '-';
+        const loadedUrl = entry.finalUrl || '-';
 
         tr.innerHTML =
           '<td>' + entry.attempt + '</td>' +
           '<td>' + escapeHtml(formatDate(entry.timestamp)) + '</td>' +
           '<td>' + badge(entry.type) + '</td>' +
+          '<td class="mono">' + escapeHtml(short(sourceUrl, 100)) + '</td>' +
+          '<td class="mono">' + escapeHtml(short(loadedUrl, 100)) + '</td>' +
           '<td>' + escapeHtml(entry.finalStatus ?? '-') + '</td>' +
           '<td>' + (entry.found301 ? 'SI' : 'no') + '</td>' +
           '<td>' + (entry.foundCacheHit ? 'SI' : 'no') + '</td>' +
-          '<td class="mono">' + escapeHtml(short(entry.error || entry.finalUrl || '-', 140)) + '</td>';
+          '<td class="mono">' + escapeHtml(short(entry.error || '-', 120)) + '</td>';
         rowsEl.appendChild(tr);
       });
     }
