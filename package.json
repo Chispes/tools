@@ -1,0 +1,14 @@
+{
+  "name": "local-toolbox",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Toolbox local/web para ejecutar herramientas de trabajo (primera: monitor 301).",
+  "scripts": {
+    "start": "node apps/api/server.js",
+    "dev": "node apps/api/server.js",
+    "monitor": "node bin/monitor-301.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

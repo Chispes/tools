@@ -1,0 +1,1128 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Viewer logs monitor 301</title>
+  <style>
+    :root {
+      --bg: #f4f6f8;
+      --panel: #ffffff;
+      --text: #1f2933;
+      --muted: #637381;
+      --ok: #1f9d55;
+      --redirect: #2d7ff9;
+      --redirect301: #f59f00;
+      --error: #d64545;
+      --other: #6c757d;
+      --line: #d9e2ec;
+      --selected: #111827;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    header {
+      padding: 18px 20px;
+      background: linear-gradient(120deg, #e3edf8, #f8fbff);
+      border-bottom: 1px solid #d8e0ea;
+    }
+
+    h1 {
+      margin: 0 0 12px;
+      font-size: 22px;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .controls-left {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    input[type="file"],
+    input[type="text"],
+    input[type="number"],
+    button {
+      font: inherit;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid #c8d2de;
+      background: #fff;
+      color: var(--text);
+    }
+
+    input[type="text"] {
+      min-width: 280px;
+    }
+
+    input[type="number"] {
+      width: 82px;
+    }
+
+    button {
+      background: #1f4f82;
+      color: #fff;
+      border-color: #1f4f82;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #173d64;
+    }
+
+    .mini-btn {
+      padding: 8px 9px;
+      background: #324a5f;
+      border-color: #324a5f;
+    }
+
+    .mini-btn:hover {
+      background: #25394a;
+    }
+
+    .inline-control {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #334e68;
+      font-size: 13px;
+      background: #fff;
+      border: 1px solid #c8d2de;
+      padding: 6px 9px;
+      border-radius: 8px;
+      white-space: nowrap;
+    }
+
+    .inline-control input[type="checkbox"] {
+      margin: 0;
+    }
+
+    .inline-control input[type="number"] {
+      width: 62px;
+      padding: 4px 6px;
+    }
+
+    .status {
+      font-size: 13px;
+      color: var(--muted);
+      text-align: right;
+    }
+
+    .chart-subtitle {
+      font-size: 12px;
+      color: var(--muted);
+      margin: -2px 0 8px;
+    }
+
+    main {
+      padding: 16px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 10px;
+    }
+
+    .stat {
+      background: var(--panel);
+      border: 1px solid #dde5ef;
+      border-radius: 10px;
+      padding: 10px 12px;
+    }
+
+    .stat .label {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 5px;
+    }
+
+    .stat .value {
+      font-weight: 700;
+      font-size: 22px;
+      line-height: 1.2;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid #dde5ef;
+      border-radius: 10px;
+      padding: 12px;
+    }
+
+    h2 {
+      margin: 0 0 10px;
+      font-size: 16px;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .legend .dot {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-right: 5px;
+      vertical-align: middle;
+    }
+
+    .chart-wrap {
+      overflow-x: auto;
+      border: 1px solid #e5eaf1;
+      border-radius: 8px;
+      background: #fcfdff;
+    }
+
+    svg {
+      display: block;
+      width: 100%;
+      min-width: 900px;
+      height: 260px;
+    }
+
+    .timeline-point {
+      cursor: pointer;
+      transition: opacity 0.12s ease;
+    }
+
+    .timeline-point:hover {
+      opacity: 0.85;
+    }
+
+    .selected-point {
+      stroke: var(--selected);
+      stroke-width: 2.5;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 8px;
+      border-bottom: 1px solid #eef2f7;
+      vertical-align: top;
+    }
+
+    thead th {
+      background: #f8fafc;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    .table-wrap {
+      max-height: 320px;
+      overflow: auto;
+      border: 1px solid #e5eaf1;
+      border-radius: 8px;
+    }
+
+    tr.data-row {
+      cursor: pointer;
+    }
+
+    tr.data-row:hover {
+      background: #f7fbff;
+    }
+
+    tr.data-row.selected {
+      background: #ecf4ff;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #fff;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .details-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 8px;
+      margin-bottom: 12px;
+      font-size: 13px;
+    }
+
+    .details-item {
+      background: #f8fafc;
+      border: 1px solid #e6edf6;
+      border-radius: 8px;
+      padding: 8px;
+    }
+
+    .details-item .k {
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 3px;
+    }
+
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      word-break: break-word;
+    }
+
+    pre {
+      margin: 0;
+      background: #0f172a;
+      color: #e6edf3;
+      padding: 10px;
+      border-radius: 8px;
+      overflow: auto;
+      font-size: 12px;
+      max-height: 300px;
+    }
+
+    .empty {
+      color: var(--muted);
+      font-style: italic;
+      padding: 6px 2px;
+    }
+
+    @media (max-width: 900px) {
+      .controls {
+        grid-template-columns: 1fr;
+      }
+
+      .status {
+        text-align: left;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Viewer de logs monitor 301</h1>
+    <div class="controls">
+      <div class="controls-left">
+        <input id="fileInput" type="file" accept=".jsonl,.log,.txt">
+        <input id="urlInput" type="text" placeholder="URL del log (ej: /logs/monitor.jsonl)">
+        <button id="loadUrlBtn" type="button">Cargar URL</button>
+        <button id="reloadNowBtn" class="mini-btn" type="button">Recargar</button>
+        <label class="inline-control"><input id="autoReloadChk" type="checkbox">Auto</label>
+        <label class="inline-control">cada <input id="reloadSecondsInput" type="number" min="2" value="10"> seg</label>
+      </div>
+      <div id="statusText" class="status">Cargando: ninguno</div>
+    </div>
+  </header>
+
+  <main>
+    <section class="stats" id="stats"></section>
+
+    <section class="panel">
+      <h2>Banda temporal de estados (haz clic en un bloque)</h2>
+      <div id="timelineMeta" class="chart-subtitle"></div>
+      <div class="legend">
+        <span><span class="dot" style="background: var(--ok)"></span>OK 2xx</span>
+        <span><span class="dot" style="background: var(--redirect)"></span>Redirect</span>
+        <span><span class="dot" style="background: var(--redirect301)"></span>Con 301</span>
+        <span><span class="dot" style="background: var(--error)"></span>Error</span>
+        <span><span class="dot" style="background: var(--other)"></span>Otro</span>
+      </div>
+      <div class="chart-wrap">
+        <svg id="timelineSvg" viewBox="0 0 1000 260" preserveAspectRatio="none"></svg>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Latencia total por comprobacion (ms)</h2>
+      <div id="durationMeta" class="chart-subtitle"></div>
+      <div class="chart-wrap">
+        <svg id="durationSvg" viewBox="0 0 1000 260" preserveAspectRatio="none"></svg>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Eventos</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Intento</th>
+              <th>Hora</th>
+              <th>Tipo</th>
+              <th>Estado final</th>
+              <th>301</th>
+              <th>Cache HIT</th>
+              <th>URL final / Error</th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Detalle del evento seleccionado</h2>
+      <div id="detailEmpty" class="empty">Selecciona un punto en la linea de tiempo o una fila de la tabla.</div>
+      <div id="detailContent" hidden>
+        <div id="detailGrid" class="details-grid"></div>
+        <h3>Saltos (hops)</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Hop</th>
+                <th>Status</th>
+                <th>Duracion</th>
+                <th>URL</th>
+                <th>Location</th>
+                <th>Cache</th>
+              </tr>
+            </thead>
+            <tbody id="hopsRows"></tbody>
+          </table>
+        </div>
+        <h3>JSON completo</h3>
+        <pre id="jsonRaw"></pre>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const TYPE_META = {
+      ok: { label: 'OK', color: '#1f9d55' },
+      redirect: { label: 'REDIRECT', color: '#2d7ff9' },
+      redirect301: { label: '301', color: '#f59f00' },
+      error: { label: 'ERROR', color: '#d64545' },
+      other: { label: 'OTRO', color: '#6c757d' },
+    };
+
+    const state = {
+      entries: [],
+      selectedIndex: -1,
+      parseErrors: [],
+      sourceType: null,
+      sourceRef: null,
+      sourceLabel: 'ninguno',
+      autoReloadTimerId: null,
+      autoReloadSeconds: 10,
+      lastLoadedAt: null,
+    };
+
+    const fileInput = document.getElementById('fileInput');
+    const urlInput = document.getElementById('urlInput');
+    const loadUrlBtn = document.getElementById('loadUrlBtn');
+    const reloadNowBtn = document.getElementById('reloadNowBtn');
+    const autoReloadChk = document.getElementById('autoReloadChk');
+    const reloadSecondsInput = document.getElementById('reloadSecondsInput');
+    const statusText = document.getElementById('statusText');
+    const statsEl = document.getElementById('stats');
+    const rowsEl = document.getElementById('rows');
+    const timelineSvg = document.getElementById('timelineSvg');
+    const durationSvg = document.getElementById('durationSvg');
+    const timelineMeta = document.getElementById('timelineMeta');
+    const durationMeta = document.getElementById('durationMeta');
+    const detailEmpty = document.getElementById('detailEmpty');
+    const detailContent = document.getElementById('detailContent');
+    const detailGrid = document.getElementById('detailGrid');
+    const hopsRows = document.getElementById('hopsRows');
+    const jsonRaw = document.getElementById('jsonRaw');
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function short(text, maxLen) {
+      const s = String(text || '');
+      if (s.length <= maxLen) return s;
+      return s.slice(0, maxLen - 1) + '...';
+    }
+
+    function formatDate(iso) {
+      const d = new Date(iso);
+      if (Number.isNaN(d.getTime())) return iso || '-';
+      return d.toLocaleString();
+    }
+
+    function parseJsonLines(text) {
+      const lines = text.split(/\r?\n/).filter((line) => line.trim() !== '');
+      const rawEntries = [];
+      const parseErrors = [];
+
+      lines.forEach((line, index) => {
+        try {
+          rawEntries.push(JSON.parse(line));
+        } catch (error) {
+          parseErrors.push({
+            line: index + 1,
+            error: error.message,
+            sample: line.slice(0, 140),
+          });
+        }
+      });
+
+      return { rawEntries, parseErrors };
+    }
+
+    function getType(entry) {
+      if (entry.error) return 'error';
+      if (entry.found301) return 'redirect301';
+      if (entry.finalStatus >= 300 && entry.finalStatus < 400) return 'redirect';
+      if (entry.finalStatus >= 200 && entry.finalStatus < 300) return 'ok';
+      return 'other';
+    }
+
+    function normalizeEntry(entry, index) {
+      const hops = Array.isArray(entry.hops) ? entry.hops : [];
+      const totalDurationMs = hops.reduce((sum, hop) => sum + (Number(hop.durationMs) || 0), 0);
+      const timestamp = entry.timestamp || null;
+      const timeMs = timestamp ? new Date(timestamp).getTime() : NaN;
+
+      return {
+        raw: entry,
+        index,
+        attempt: Number(entry.attempt) || index + 1,
+        timestamp,
+        timeMs,
+        type: getType(entry),
+        finalStatus: entry.finalStatus ?? null,
+        found301: Boolean(entry.found301),
+        foundCacheHit: Boolean(entry.foundCacheHit),
+        finalUrl: entry.finalUrl || null,
+        error: entry.error || null,
+        hops,
+        totalDurationMs,
+      };
+    }
+
+    function sortEntries(entries) {
+      return [...entries].sort((a, b) => {
+        const aValid = Number.isFinite(a.timeMs);
+        const bValid = Number.isFinite(b.timeMs);
+        if (aValid && bValid && a.timeMs !== b.timeMs) return a.timeMs - b.timeMs;
+        return a.attempt - b.attempt;
+      });
+    }
+
+    function buildStats(entries) {
+      const out = {
+        total: entries.length,
+        errors: 0,
+        with301: 0,
+        cacheHit: 0,
+        ok: 0,
+      };
+      entries.forEach((entry) => {
+        if (entry.type === 'error') out.errors += 1;
+        if (entry.found301) out.with301 += 1;
+        if (entry.foundCacheHit) out.cacheHit += 1;
+        if (entry.type === 'ok') out.ok += 1;
+      });
+      return out;
+    }
+
+    function badge(type) {
+      const meta = TYPE_META[type] || TYPE_META.other;
+      return '<span class="badge" style="background:' + meta.color + '">' + meta.label + '</span>';
+    }
+
+    function setStatus(msg) {
+      statusText.textContent = msg;
+    }
+
+    function formatClock(iso) {
+      const d = new Date(iso);
+      if (Number.isNaN(d.getTime())) return '-';
+      return d.toLocaleTimeString();
+    }
+
+    function formatMs(value) {
+      const n = Number(value) || 0;
+      if (n >= 1000) return (n / 1000).toFixed(2) + ' s';
+      return Math.round(n) + ' ms';
+    }
+
+    function percentile(values, p) {
+      if (!values.length) return 0;
+      const sorted = [...values].sort((a, b) => a - b);
+      const idx = Math.min(sorted.length - 1, Math.max(0, Math.ceil((p / 100) * sorted.length) - 1));
+      return sorted[idx];
+    }
+
+    function clearSvg(svg) {
+      while (svg.firstChild) svg.removeChild(svg.firstChild);
+    }
+
+    function createSvgNode(name, attrs) {
+      const node = document.createElementNS('http://www.w3.org/2000/svg', name);
+      Object.entries(attrs || {}).forEach(([k, v]) => node.setAttribute(k, v));
+      return node;
+    }
+
+    function buildXScale(entries, width, margin) {
+      const times = entries.map((e, i) => (Number.isFinite(e.timeMs) ? e.timeMs : i));
+      const min = Math.min(...times);
+      const max = Math.max(...times);
+      const span = Math.max(1, max - min);
+      return {
+        min,
+        max,
+        toX(entry, idx) {
+          const t = Number.isFinite(entry.timeMs) ? entry.timeMs : idx;
+          return margin + ((t - min) / span) * (width - margin * 2);
+        },
+      };
+    }
+
+    function renderTimeAxis(svg, entries, xPositions, y) {
+      if (!entries.length) return;
+      const ticks = Math.min(6, entries.length);
+      for (let i = 0; i < ticks; i += 1) {
+        const idx = ticks === 1 ? 0 : Math.round((i * (entries.length - 1)) / (ticks - 1));
+        const x = xPositions[idx];
+
+        const tick = createSvgNode('line', {
+          x1: x,
+          y1: y,
+          x2: x,
+          y2: y + 4,
+          stroke: '#9fb3c8',
+          'stroke-width': '1',
+        });
+        svg.appendChild(tick);
+
+        const label = createSvgNode('text', {
+          x,
+          y: y + 16,
+          fill: '#52606d',
+          'font-size': '11',
+          'text-anchor': 'middle',
+          'font-family': 'Segoe UI, sans-serif',
+        });
+        label.textContent = formatClock(entries[idx].timestamp);
+        svg.appendChild(label);
+      }
+    }
+
+    function renderTimeline() {
+      clearSvg(timelineSvg);
+      const entries = state.entries;
+      if (!entries.length) {
+        timelineMeta.textContent = 'Sin datos cargados.';
+        return;
+      }
+
+      const width = Math.max(900, entries.length * 18);
+      const height = 220;
+      const margin = 38;
+      timelineSvg.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
+      timelineSvg.style.minWidth = width + 'px';
+      const plotY = 70;
+      const plotHeight = 74;
+      const axisY = 162;
+
+      const bg = createSvgNode('rect', {
+        x1: margin,
+        y1: plotY,
+        x: margin,
+        y: plotY,
+        width: width - margin * 2,
+        height: plotHeight,
+        fill: '#f8fafc',
+        stroke: '#dfe7f1',
+      });
+      timelineSvg.appendChild(bg);
+
+      const scale = buildXScale(entries, width, margin);
+      const xPositions = entries.map((entry, i) => scale.toX(entry, i));
+
+      for (let i = 0; i < entries.length; i += 1) {
+        const entry = entries[i];
+        const meta = TYPE_META[entry.type] || TYPE_META.other;
+        const selected = i === state.selectedIndex;
+        const left = i === 0 ? margin : (xPositions[i - 1] + xPositions[i]) / 2;
+        const right = i === entries.length - 1 ? width - margin : (xPositions[i] + xPositions[i + 1]) / 2;
+        const blockWidth = Math.max(2, right - left - 1);
+
+        const block = createSvgNode('rect', {
+          x: left,
+          y: plotY + 4,
+          width: blockWidth,
+          height: plotHeight - 8,
+          fill: meta.color,
+          opacity: selected ? '1' : '0.84',
+          stroke: selected ? '#111827' : '#ffffff',
+          'stroke-width': selected ? '2' : '1',
+          class: 'timeline-point',
+          'data-index': String(i),
+        });
+
+        const title = createSvgNode('title');
+        title.textContent =
+          '#' + entry.attempt + ' | ' + formatDate(entry.timestamp) +
+          ' | tipo=' + meta.label +
+          ' | status=' + (entry.finalStatus ?? '-') +
+          ' | latencia=' + formatMs(entry.totalDurationMs) +
+          (entry.error ? ' | error=' + entry.error : '');
+        block.appendChild(title);
+
+        block.addEventListener('click', () => selectIndex(i));
+        timelineSvg.appendChild(block);
+      }
+
+      const axis = createSvgNode('line', {
+        x1: margin,
+        y1: axisY,
+        x2: width - margin,
+        y2: axisY,
+        stroke: '#9fb3c8',
+        'stroke-width': '1.2',
+      });
+      timelineSvg.appendChild(axis);
+      renderTimeAxis(timelineSvg, entries, xPositions, axisY);
+
+      const first = entries[0];
+      const last = entries[entries.length - 1];
+      timelineMeta.textContent =
+        'Eventos: ' + entries.length +
+        ' | desde ' + formatDate(first.timestamp) +
+        ' hasta ' + formatDate(last.timestamp);
+    }
+
+    function renderDurationChart() {
+      clearSvg(durationSvg);
+      const entries = state.entries;
+      if (!entries.length) {
+        durationMeta.textContent = 'Sin datos cargados.';
+        return;
+      }
+
+      const width = Math.max(900, entries.length * 18);
+      const height = 260;
+      const margin = 42;
+      durationSvg.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
+      durationSvg.style.minWidth = width + 'px';
+
+      const durations = entries.map((e) => Number(e.totalDurationMs) || 0);
+      const avg = durations.reduce((sum, v) => sum + v, 0) / Math.max(1, durations.length);
+      const p95 = percentile(durations, 95);
+      const maxDuration = Math.max(...durations, 0);
+      const chartMax = Math.max(100, Math.ceil(p95 * 1.2));
+      const outliers = durations.filter((v) => v > chartMax).length;
+
+      const chartTop = 16;
+      const chartBottom = height - 34;
+      const chartHeight = chartBottom - chartTop;
+      const yScaleMax = Math.max(chartMax, 1);
+      const scale = buildXScale(entries, width, margin);
+      const xPositions = entries.map((entry, i) => scale.toX(entry, i));
+
+      function toY(ms) {
+        const safeMs = Math.min(ms, yScaleMax);
+        return chartBottom - (safeMs / yScaleMax) * chartHeight;
+      }
+
+      for (let i = 0; i <= 4; i += 1) {
+        const v = (yScaleMax / 4) * i;
+        const y = toY(v);
+        const line = createSvgNode('line', {
+          x1: margin,
+          y1: y,
+          x2: width - margin,
+          y2: y,
+          stroke: '#e2e8f0',
+          'stroke-width': '1',
+        });
+        durationSvg.appendChild(line);
+
+        const label = createSvgNode('text', {
+          x: 6,
+          y: y + 4,
+          fill: '#637381',
+          'font-size': '11',
+          'font-family': 'Segoe UI, sans-serif',
+        });
+        label.textContent = Math.round(v) + ' ms';
+        durationSvg.appendChild(label);
+      }
+
+      const axis = createSvgNode('line', {
+        x1: margin,
+        y1: chartBottom,
+        x2: width - margin,
+        y2: chartBottom,
+        stroke: '#9fb3c8',
+        'stroke-width': '1.2',
+      });
+      durationSvg.appendChild(axis);
+      renderTimeAxis(durationSvg, entries, xPositions, chartBottom);
+
+      const pathData = entries
+        .map((entry, i) => (i === 0 ? 'M ' : 'L ') + xPositions[i] + ' ' + toY(entry.totalDurationMs))
+        .join(' ');
+      const path = createSvgNode('path', {
+        d: pathData,
+        fill: 'none',
+        stroke: '#334e68',
+        'stroke-width': '1.5',
+        opacity: '0.8',
+      });
+      durationSvg.appendChild(path);
+
+      entries.forEach((entry, i) => {
+        const centerX = xPositions[i];
+        const y = toY(entry.totalDurationMs);
+        const meta = TYPE_META[entry.type] || TYPE_META.other;
+        const selected = i === state.selectedIndex;
+        const clipped = entry.totalDurationMs > yScaleMax;
+
+        const hitArea = createSvgNode('circle', {
+          cx: centerX,
+          cy: y,
+          r: 10,
+          fill: 'transparent',
+          class: 'timeline-point',
+          'data-index': String(i),
+        });
+
+        const point = createSvgNode('circle', {
+          cx: centerX,
+          cy: y,
+          r: selected ? 6 : 4.5,
+          fill: meta.color,
+          opacity: selected ? '1' : '0.9',
+          stroke: selected ? '#111827' : 'none',
+          'stroke-width': selected ? '1.5' : '0',
+          class: 'timeline-point',
+          'data-index': String(i),
+        });
+        const title = createSvgNode('title');
+        title.textContent = '#' + entry.attempt + ' | ' + formatMs(entry.totalDurationMs) + (clipped ? ' (fuera de escala)' : '');
+        hitArea.appendChild(title.cloneNode(true));
+        point.appendChild(title);
+        hitArea.addEventListener('click', () => selectIndex(i));
+        point.addEventListener('click', () => selectIndex(i));
+        durationSvg.appendChild(hitArea);
+        durationSvg.appendChild(point);
+
+        if (clipped) {
+          const marker = createSvgNode('path', {
+            d: 'M ' + centerX + ' ' + (chartTop + 2) + ' L ' + (centerX - 4) + ' ' + (chartTop + 10) + ' L ' + (centerX + 4) + ' ' + (chartTop + 10) + ' Z',
+            fill: '#7b8794',
+          });
+          durationSvg.appendChild(marker);
+        }
+      });
+
+      durationMeta.textContent =
+        'Media: ' + formatMs(avg) +
+        ' | p95: ' + formatMs(p95) +
+        ' | max: ' + formatMs(maxDuration) +
+        (outliers ? ' | fuera de escala: ' + outliers : '');
+    }
+
+    function renderStats() {
+      const stats = buildStats(state.entries);
+      const parseErr = state.parseErrors.length;
+      statsEl.innerHTML =
+        '<div class="stat"><div class="label">Total comprobaciones</div><div class="value">' + stats.total + '</div></div>' +
+        '<div class="stat"><div class="label">Errores de red</div><div class="value" style="color:#d64545">' + stats.errors + '</div></div>' +
+        '<div class="stat"><div class="label">Comprobaciones con 301</div><div class="value" style="color:#f59f00">' + stats.with301 + '</div></div>' +
+        '<div class="stat"><div class="label">Comprobaciones con cache HIT</div><div class="value" style="color:#2d7ff9">' + stats.cacheHit + '</div></div>' +
+        '<div class="stat"><div class="label">OK (2xx)</div><div class="value" style="color:#1f9d55">' + stats.ok + '</div></div>' +
+        '<div class="stat"><div class="label">Lineas invalidas JSON</div><div class="value" style="color:#6c757d">' + parseErr + '</div></div>';
+    }
+
+    function renderRows() {
+      rowsEl.innerHTML = '';
+      const ordered = state.entries.map((entry, i) => ({ entry, i })).reverse();
+      ordered.forEach(({ entry, i }) => {
+        const tr = document.createElement('tr');
+        tr.className = 'data-row' + (i === state.selectedIndex ? ' selected' : '');
+        tr.addEventListener('click', () => selectIndex(i));
+
+        tr.innerHTML =
+          '<td>' + entry.attempt + '</td>' +
+          '<td>' + escapeHtml(formatDate(entry.timestamp)) + '</td>' +
+          '<td>' + badge(entry.type) + '</td>' +
+          '<td>' + escapeHtml(entry.finalStatus ?? '-') + '</td>' +
+          '<td>' + (entry.found301 ? 'SI' : 'no') + '</td>' +
+          '<td>' + (entry.foundCacheHit ? 'SI' : 'no') + '</td>' +
+          '<td class="mono">' + escapeHtml(short(entry.error || entry.finalUrl || '-', 140)) + '</td>';
+        rowsEl.appendChild(tr);
+      });
+    }
+
+    function renderDetails() {
+      if (state.selectedIndex < 0 || state.selectedIndex >= state.entries.length) {
+        detailEmpty.hidden = false;
+        detailContent.hidden = true;
+        return;
+      }
+
+      const entry = state.entries[state.selectedIndex];
+      detailEmpty.hidden = true;
+      detailContent.hidden = false;
+
+      const fields = [
+        ['Intento', entry.attempt],
+        ['Hora', formatDate(entry.timestamp)],
+        ['Tipo', (TYPE_META[entry.type] || TYPE_META.other).label],
+        ['Estado final', entry.finalStatus ?? '-'],
+        ['Con 301', entry.found301 ? 'SI' : 'no'],
+        ['Cache HIT', entry.foundCacheHit ? 'SI' : 'no'],
+        ['Latencia total', entry.totalDurationMs + ' ms'],
+        ['URL final', entry.finalUrl || '-'],
+        ['Error', entry.error || '-'],
+      ];
+
+      detailGrid.innerHTML = fields.map(([k, v]) => (
+        '<div class="details-item"><div class="k">' + escapeHtml(k) + '</div><div class="mono">' + escapeHtml(v) + '</div></div>'
+      )).join('');
+
+      if (!entry.hops.length) {
+        hopsRows.innerHTML = '<tr><td colspan="6" class="empty">No hay hops para este evento.</td></tr>';
+      } else {
+        hopsRows.innerHTML = entry.hops.map((hop) => {
+          const cacheSummary = hop.cacheSummary || '-';
+          return (
+            '<tr>' +
+            '<td>' + escapeHtml(hop.hop ?? '-') + '</td>' +
+            '<td>' + escapeHtml(hop.status ?? '-') + '</td>' +
+            '<td>' + escapeHtml((hop.durationMs ?? 0) + ' ms') + '</td>' +
+            '<td class="mono">' + escapeHtml(short(hop.url || '-', 120)) + '</td>' +
+            '<td class="mono">' + escapeHtml(short(hop.location || '-', 120)) + '</td>' +
+            '<td class="mono">' + escapeHtml(short(cacheSummary, 120)) + '</td>' +
+            '</tr>'
+          );
+        }).join('');
+      }
+
+      jsonRaw.textContent = JSON.stringify(entry.raw, null, 2);
+    }
+
+    function selectIndex(index) {
+      if (index < 0 || index >= state.entries.length) return;
+      state.selectedIndex = index;
+      renderTimeline();
+      renderDurationChart();
+      renderRows();
+      renderDetails();
+    }
+
+    function renderAll() {
+      renderStats();
+      renderTimeline();
+      renderDurationChart();
+      renderRows();
+      renderDetails();
+    }
+
+    function buildStatusMessage(extra) {
+      const autoPart = autoReloadChk.checked
+        ? (state.sourceType === 'url' ? 'auto: ON cada ' + state.autoReloadSeconds + 's' : 'auto: ON (solo URL)')
+        : 'auto: off';
+      const updated = state.lastLoadedAt
+        ? ' | actualizado: ' + new Date(state.lastLoadedAt).toLocaleTimeString()
+        : '';
+      const extraPart = extra ? ' | ' + extra : '';
+      return (
+        'Fuente: ' + state.sourceLabel +
+        ' | eventos: ' + state.entries.length +
+        ' | lineas invalidas: ' + state.parseErrors.length +
+        ' | ' + autoPart +
+        updated +
+        extraPart
+      );
+    }
+
+    function stopAutoReload() {
+      if (state.autoReloadTimerId) {
+        clearInterval(state.autoReloadTimerId);
+        state.autoReloadTimerId = null;
+      }
+    }
+
+    function getReloadSeconds() {
+      const n = Number(reloadSecondsInput.value);
+      if (!Number.isFinite(n) || n < 2) return 10;
+      return Math.floor(n);
+    }
+
+    function restartAutoReload() {
+      stopAutoReload();
+      state.autoReloadSeconds = getReloadSeconds();
+      reloadSecondsInput.value = String(state.autoReloadSeconds);
+
+      if (!autoReloadChk.checked) {
+        setStatus(buildStatusMessage());
+        return;
+      }
+
+      if (state.sourceType !== 'url' || !state.sourceRef) {
+        setStatus(buildStatusMessage('Auto-recarga solo funciona con URL'));
+        return;
+      }
+
+      state.autoReloadTimerId = setInterval(() => {
+        reloadFromCurrentSource({ silent: true, preserveSelection: true })
+          .catch((error) => setStatus(buildStatusMessage('Error auto-recarga: ' + error.message)));
+      }, state.autoReloadSeconds * 1000);
+
+      setStatus(buildStatusMessage('Auto-recarga activa'));
+    }
+
+    function setSource(type, ref, label) {
+      state.sourceType = type;
+      state.sourceRef = ref;
+      state.sourceLabel = label;
+    }
+
+    function withCacheBust(url) {
+      const u = new URL(url, window.location.href);
+      u.searchParams.set('_ts', String(Date.now()));
+      return u.toString();
+    }
+
+    function loadText(text, sourceLabel, options = {}) {
+      const parsed = parseJsonLines(text);
+      const normalized = sortEntries(parsed.rawEntries.map(normalizeEntry));
+      const previous = state.entries[state.selectedIndex];
+      const previousRunId = previous && previous.raw ? previous.raw.runId : null;
+
+      state.entries = normalized;
+      state.parseErrors = parsed.parseErrors;
+      state.sourceLabel = sourceLabel;
+      state.lastLoadedAt = Date.now();
+
+      let selectedIndex = -1;
+      if (options.preserveSelection && previousRunId) {
+        selectedIndex = normalized.findIndex((entry) => entry.raw && entry.raw.runId === previousRunId);
+      }
+      if (selectedIndex < 0 && normalized.length) {
+        selectedIndex = normalized.length - 1;
+      }
+      state.selectedIndex = selectedIndex;
+
+      renderAll();
+      if (!options.silent) {
+        setStatus(buildStatusMessage());
+      } else {
+        setStatus(buildStatusMessage('Auto-recargado'));
+      }
+    }
+
+    async function loadFromUrl(url, options = {}) {
+      const response = await fetch(withCacheBust(url), { cache: 'no-store' });
+      if (!response.ok) {
+        throw new Error('HTTP ' + response.status + ' al cargar ' + url);
+      }
+      const text = await response.text();
+      loadText(text, state.sourceLabel || url, options);
+    }
+
+    async function reloadFromCurrentSource(options = {}) {
+      if (!state.sourceType || !state.sourceRef) {
+        throw new Error('No hay fuente cargada');
+      }
+
+      if (state.sourceType === 'url') {
+        await loadFromUrl(state.sourceRef, options);
+        return;
+      }
+
+      if (state.sourceType === 'file') {
+        const text = await state.sourceRef.text();
+        loadText(text, state.sourceLabel, options);
+        return;
+      }
+
+      throw new Error('Fuente no soportada');
+    }
+
+    fileInput.addEventListener('change', async (event) => {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      try {
+        setSource('file', file, file.name);
+        await reloadFromCurrentSource({ preserveSelection: false });
+        restartAutoReload();
+      } catch (error) {
+        setStatus(buildStatusMessage('Error leyendo archivo: ' + error.message));
+      }
+    });
+
+    loadUrlBtn.addEventListener('click', async () => {
+      const url = urlInput.value.trim();
+      if (!url) {
+        setStatus(buildStatusMessage('Escribe una URL de log para cargar'));
+        return;
+      }
+      try {
+        setSource('url', url, url);
+        setStatus('Cargando URL...');
+        await reloadFromCurrentSource({ preserveSelection: false });
+        restartAutoReload();
+      } catch (error) {
+        setStatus(buildStatusMessage('Error cargando URL: ' + error.message));
+      }
+    });
+
+    reloadNowBtn.addEventListener('click', async () => {
+      try {
+        setStatus('Recargando...');
+        await reloadFromCurrentSource({ preserveSelection: true });
+      } catch (error) {
+        setStatus(buildStatusMessage('Error en recarga manual: ' + error.message));
+      }
+    });
+
+    autoReloadChk.addEventListener('change', () => {
+      restartAutoReload();
+    });
+
+    reloadSecondsInput.addEventListener('change', () => {
+      restartAutoReload();
+    });
+
+    const fileParam = new URLSearchParams(window.location.search).get('file');
+    if (fileParam) {
+      urlInput.value = fileParam;
+      setSource('url', fileParam, fileParam);
+      reloadFromCurrentSource({ preserveSelection: false })
+        .then(() => restartAutoReload())
+        .catch((error) => setStatus(buildStatusMessage('Error cargando ?file=: ' + error.message)));
+    } else {
+      renderAll();
+      setStatus(buildStatusMessage());
+    }
+  </script>
+</body>
+</html>

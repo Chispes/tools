@@ -1,0 +1,574 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Toolbox local</title>
+  <style>
+    :root {
+      --bg: #f3f6fa;
+      --panel: #ffffff;
+      --text: #1f2937;
+      --muted: #66788a;
+      --line: #dbe5ef;
+      --primary: #0d6efd;
+      --danger: #d64545;
+      --ok: #1f9d55;
+      --warn: #f59f00;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    header {
+      padding: 18px 20px;
+      background: linear-gradient(120deg, #dfebf8, #f6fbff);
+      border-bottom: 1px solid #cfdae6;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 24px;
+    }
+
+    .subtitle {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    main {
+      max-width: 1220px;
+      margin: 16px auto;
+      padding: 0 14px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 12px;
+    }
+
+    .panel h2 {
+      margin: 0 0 10px;
+      font-size: 18px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 10px;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      color: #334e68;
+      margin-bottom: 4px;
+    }
+
+    input[type="text"],
+    input[type="url"],
+    input[type="number"],
+    select,
+    button {
+      width: 100%;
+      border: 1px solid #c7d2df;
+      border-radius: 8px;
+      padding: 8px 10px;
+      font: inherit;
+      background: #fff;
+      color: var(--text);
+    }
+
+    .inline {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .inline button {
+      width: auto;
+      min-width: 110px;
+    }
+
+    .chk {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 8px;
+      border: 1px solid #c7d2df;
+      border-radius: 8px;
+      background: #fff;
+      color: #334e68;
+      font-size: 13px;
+    }
+
+    .chk input {
+      margin: 0;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+      cursor: pointer;
+    }
+
+    .btn-primary:hover { background: #0b5ed7; }
+
+    .btn-secondary {
+      background: #385170;
+      border-color: #385170;
+      color: #fff;
+      cursor: pointer;
+    }
+
+    .btn-secondary:hover { background: #2b3f57; }
+
+    .btn-danger {
+      background: var(--danger);
+      border-color: var(--danger);
+      color: #fff;
+      cursor: pointer;
+    }
+
+    .btn-danger:hover { background: #b73838; }
+
+    .status {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .stat {
+      border: 1px solid #dce6f2;
+      border-radius: 8px;
+      padding: 8px;
+      background: #f9fbfd;
+    }
+
+    .stat .k {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .stat .v {
+      font-size: 22px;
+      font-weight: 700;
+      margin-top: 2px;
+    }
+
+    .table-wrap {
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      overflow: auto;
+      max-height: 520px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      min-width: 980px;
+    }
+
+    th, td {
+      text-align: left;
+      border-bottom: 1px solid #edf2f8;
+      padding: 8px;
+      vertical-align: top;
+    }
+
+    thead th {
+      position: sticky;
+      top: 0;
+      background: #f8fafc;
+      z-index: 1;
+    }
+
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      word-break: break-word;
+    }
+
+    .tag {
+      display: inline-block;
+      border-radius: 999px;
+      padding: 2px 8px;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .tag.running { background: var(--ok); }
+    .tag.stopped { background: #6c757d; }
+
+    .cell-actions {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .cell-actions button,
+    .cell-actions a {
+      display: inline-block;
+      border: 1px solid #ccd7e4;
+      border-radius: 6px;
+      padding: 5px 8px;
+      font-size: 12px;
+      text-decoration: none;
+      color: #17324d;
+      background: #fff;
+      cursor: pointer;
+    }
+
+    .cell-actions a { border-color: #2d7ff9; color: #1d58b8; }
+
+    @media (max-width: 900px) {
+      main {
+        padding: 0 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Toolbox local</h1>
+    <div class="subtitle">Estructura preparada para multiples herramientas. Activa ahora: monitor de redirecciones 301.</div>
+  </header>
+
+  <main>
+    <section class="panel">
+      <h2>Nueva comprobacion: Monitor 301</h2>
+      <form id="jobForm">
+        <div class="grid">
+          <div>
+            <label for="url">URL</label>
+            <input id="url" name="url" type="url" required placeholder="https://techy44.okdiario.com/">
+          </div>
+          <div>
+            <label for="everyMs">Intervalo (ms)</label>
+            <input id="everyMs" name="everyMs" type="number" min="1000" value="30000" required>
+          </div>
+          <div>
+            <label for="timeoutMs">Timeout (ms)</label>
+            <input id="timeoutMs" name="timeoutMs" type="number" min="1000" value="15000" required>
+          </div>
+          <div>
+            <label for="maxRedirects">Max redirects</label>
+            <input id="maxRedirects" name="maxRedirects" type="number" min="0" value="10" required>
+          </div>
+          <div>
+            <label for="userAgentPreset">User-Agent preset</label>
+            <select id="userAgentPreset" name="userAgentPreset">
+              <option value="">Por defecto (toolbox)</option>
+              <option value="__custom__">Personalizado...</option>
+            </select>
+          </div>
+          <div>
+            <label for="userAgentCustom">User-Agent personalizado</label>
+            <input id="userAgentCustom" name="userAgentCustom" type="text" placeholder="Mozilla/5.0 ...">
+          </div>
+        </div>
+
+        <div class="inline" style="margin-top:10px">
+          <label class="chk"><input id="forceNoCache" type="checkbox">Forzar no-cache</label>
+          <label class="chk"><input id="stopOn301" type="checkbox">Parar en primer 301</label>
+          <button class="btn-primary" type="submit">Iniciar</button>
+          <button id="reloadJobsBtn" class="btn-secondary" type="button">Refrescar jobs</button>
+          <label class="chk"><input id="autoRefreshChk" type="checkbox" checked>Auto refresh (5s)</label>
+        </div>
+      </form>
+      <div id="createStatus" class="status" style="margin-top:8px">Sin acciones aun.</div>
+    </section>
+
+    <section class="panel">
+      <h2>Jobs</h2>
+      <div class="stats" id="stats"></div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Estado</th>
+              <th>URL</th>
+              <th>Config</th>
+              <th>Ultimo evento</th>
+              <th>Log</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="jobsRows"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const form = document.getElementById('jobForm');
+    const createStatus = document.getElementById('createStatus');
+    const jobsRows = document.getElementById('jobsRows');
+    const stats = document.getElementById('stats');
+    const reloadJobsBtn = document.getElementById('reloadJobsBtn');
+    const autoRefreshChk = document.getElementById('autoRefreshChk');
+    const userAgentPreset = document.getElementById('userAgentPreset');
+    const userAgentCustom = document.getElementById('userAgentCustom');
+
+    let autoRefreshId = null;
+    let defaultUserAgent = '';
+    let userAgentPresets = [];
+
+    function escapeHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function short(str, max = 130) {
+      const value = String(str || '');
+      return value.length > max ? value.slice(0, max - 1) + '...' : value;
+    }
+
+    function fmtDate(iso) {
+      if (!iso) return '-';
+      const d = new Date(iso);
+      if (Number.isNaN(d.getTime())) return iso;
+      return d.toLocaleString();
+    }
+
+    async function api(path, options = {}) {
+      const res = await fetch(path, {
+        ...options,
+        headers: {
+          'content-type': 'application/json',
+          ...(options.headers || {}),
+        },
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || ('HTTP ' + res.status));
+      }
+      return data;
+    }
+
+    function displayUserAgent(ua) {
+      if (!ua) return '(default)';
+      const preset = userAgentPresets.find((item) => item.value === ua);
+      if (preset) return preset.label;
+      return short(ua, 52);
+    }
+
+    function getSelectedUserAgent() {
+      if (userAgentPreset.value === '__custom__') {
+        const custom = userAgentCustom.value.trim();
+        return custom || null;
+      }
+      if (!userAgentPreset.value) return null;
+      return userAgentPreset.value;
+    }
+
+    function syncUserAgentInputVisibility() {
+      const showCustom = userAgentPreset.value === '__custom__';
+      userAgentCustom.style.display = showCustom ? '' : 'none';
+      if (!showCustom) {
+        userAgentCustom.value = '';
+      }
+    }
+
+    function fillUserAgentPresets(defaultUa, presets) {
+      defaultUserAgent = defaultUa || '';
+      userAgentPresets = Array.isArray(presets) ? presets : [];
+
+      userAgentPreset.innerHTML = '';
+      const defaultOption = document.createElement('option');
+      defaultOption.value = '';
+      defaultOption.textContent = 'Por defecto (toolbox)';
+      userAgentPreset.appendChild(defaultOption);
+
+      userAgentPresets.forEach((preset) => {
+        const option = document.createElement('option');
+        option.value = preset.value;
+        option.textContent = preset.label;
+        userAgentPreset.appendChild(option);
+      });
+
+      const customOption = document.createElement('option');
+      customOption.value = '__custom__';
+      customOption.textContent = 'Personalizado...';
+      userAgentPreset.appendChild(customOption);
+
+      userAgentPreset.value = '';
+      syncUserAgentInputVisibility();
+    }
+
+    function renderStats(jobs) {
+      const running = jobs.filter((j) => j.status === 'running').length;
+      const stopped = jobs.filter((j) => j.status === 'stopped').length;
+      const with301 = jobs.filter((j) => j.lastEvent && j.lastEvent.found301).length;
+      stats.innerHTML =
+        '<div class="stat"><div class="k">Total jobs</div><div class="v">' + jobs.length + '</div></div>' +
+        '<div class="stat"><div class="k">Running</div><div class="v" style="color:#1f9d55">' + running + '</div></div>' +
+        '<div class="stat"><div class="k">Stopped</div><div class="v" style="color:#6c757d">' + stopped + '</div></div>' +
+        '<div class="stat"><div class="k">Ultimo evento con 301</div><div class="v" style="color:#f59f00">' + with301 + '</div></div>';
+    }
+
+    function renderJobs(jobs) {
+      renderStats(jobs);
+      jobsRows.innerHTML = '';
+
+      if (!jobs.length) {
+        jobsRows.innerHTML = '<tr><td colspan="7" style="color:#66788a;font-style:italic">No hay jobs aun.</td></tr>';
+        return;
+      }
+
+      jobs.forEach((job) => {
+        const last = job.lastEvent;
+        const lastInfo = !last
+          ? '-'
+          : (last.ok
+            ? ('Intento #' + last.attempt + ' | status=' + (last.finalStatus || '-') + ' | 301=' + (last.found301 ? 'SI' : 'no') + ' | cache=' + (last.foundCacheHit ? 'HIT' : 'no'))
+            : ('Intento #' + last.attempt + ' | ERROR: ' + short(last.error, 90))
+          );
+
+        const tr = document.createElement('tr');
+        tr.innerHTML =
+          '<td class="mono">' + escapeHtml(job.id) + '</td>' +
+          '<td><span class="tag ' + escapeHtml(job.status) + '">' + escapeHtml(job.status) + '</span><br><small>' + escapeHtml(fmtDate(job.lastRunAt)) + '</small></td>' +
+          '<td class="mono" title="' + escapeHtml(job.config.url) + '">' + escapeHtml(short(job.config.url, 85)) + '</td>' +
+          '<td class="mono">every=' + job.config.everyMs + 'ms<br>timeout=' + job.config.timeoutMs + 'ms<br>maxR=' + job.config.maxRedirects + '<br>no-cache=' + (job.config.forceNoCache ? 'si' : 'no') + '<br>ua=' + escapeHtml(displayUserAgent(job.config.userAgent)) + '</td>' +
+          '<td class="mono" title="' + escapeHtml(lastInfo) + '">' + escapeHtml(short(lastInfo, 115)) + '</td>' +
+          '<td class="mono"><a href="' + escapeHtml(job.logUrl) + '" target="_blank" rel="noreferrer">jsonl</a><br><a href="/log-viewer.html?file=' + encodeURIComponent(job.logUrl) + '" target="_blank" rel="noreferrer">abrir viewer</a></td>' +
+          '<td class="cell-actions"></td>';
+
+        const actionsCell = tr.querySelector('.cell-actions');
+
+        if (job.status === 'running') {
+          const stopBtn = document.createElement('button');
+          stopBtn.className = 'btn-danger';
+          stopBtn.textContent = 'Stop';
+          stopBtn.addEventListener('click', async () => {
+            stopBtn.disabled = true;
+            try {
+              await api('/api/redirect-monitor/jobs/' + encodeURIComponent(job.id) + '/stop', { method: 'POST' });
+              createStatus.textContent = 'Job detenido: ' + job.id;
+              await loadJobs();
+            } catch (error) {
+              createStatus.textContent = 'Error al detener ' + job.id + ': ' + error.message;
+              stopBtn.disabled = false;
+            }
+          });
+          actionsCell.appendChild(stopBtn);
+        }
+
+        const viewBtn = document.createElement('a');
+        viewBtn.href = '/log-viewer.html?file=' + encodeURIComponent(job.logUrl);
+        viewBtn.target = '_blank';
+        viewBtn.rel = 'noreferrer';
+        viewBtn.textContent = 'Ver detalle';
+        actionsCell.appendChild(viewBtn);
+
+        jobsRows.appendChild(tr);
+      });
+    }
+
+    async function loadJobs() {
+      const data = await api('/api/redirect-monitor/jobs');
+      renderJobs(data.jobs || []);
+    }
+
+    function restartAutoRefresh() {
+      if (autoRefreshId) {
+        clearInterval(autoRefreshId);
+        autoRefreshId = null;
+      }
+      if (autoRefreshChk.checked) {
+        autoRefreshId = setInterval(() => {
+          loadJobs().catch((error) => {
+            createStatus.textContent = 'Error refrescando jobs: ' + error.message;
+          });
+        }, 5000);
+      }
+    }
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      createStatus.textContent = 'Creando job...';
+
+      const payload = {
+        url: document.getElementById('url').value.trim(),
+        everyMs: Number(document.getElementById('everyMs').value),
+        timeoutMs: Number(document.getElementById('timeoutMs').value),
+        maxRedirects: Number(document.getElementById('maxRedirects').value),
+        userAgent: getSelectedUserAgent(),
+        forceNoCache: document.getElementById('forceNoCache').checked,
+        stopOn301: document.getElementById('stopOn301').checked,
+      };
+
+      try {
+        const data = await api('/api/redirect-monitor/jobs', {
+          method: 'POST',
+          body: JSON.stringify(payload),
+        });
+        createStatus.textContent = 'Job creado: ' + data.job.id;
+        await loadJobs();
+      } catch (error) {
+        createStatus.textContent = 'Error creando job: ' + error.message;
+      }
+    });
+
+    reloadJobsBtn.addEventListener('click', () => {
+      loadJobs().catch((error) => {
+        createStatus.textContent = 'Error refrescando jobs: ' + error.message;
+      });
+    });
+
+    autoRefreshChk.addEventListener('change', () => {
+      restartAutoRefresh();
+    });
+
+    userAgentPreset.addEventListener('change', () => {
+      syncUserAgentInputVisibility();
+    });
+
+    async function init() {
+      try {
+        const data = await api('/api/redirect-monitor/user-agents');
+        fillUserAgentPresets(data.defaultUserAgent, data.presets);
+      } catch (_) {
+        fillUserAgentPresets('', []);
+      }
+
+      await loadJobs();
+      createStatus.textContent = 'API conectada.';
+    }
+
+    init().catch((error) => {
+      createStatus.textContent = 'No se pudo cargar API: ' + error.message;
+    });
+
+    restartAutoRefresh();
+  </script>
+</body>
+</html>
