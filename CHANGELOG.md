@@ -22,6 +22,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 - Timeline/latency chart hover no longer scales points, improving click stability.
+- Log viewer now supports a time-window selector (1h..7d/todo) and caps chart width to avoid unbounded horizontal scrolling on very large logs.
 
 ## [0.1.0] - 2026-02-27
 ### Added
