@@ -895,6 +895,8 @@
         ['Intento', entry.attempt],
         ['Hora', formatDate(entry.timestamp)],
         ['Tipo', (TYPE_META[entry.type] || TYPE_META.other).label],
+        ['Modo objetivo', entry.raw.targetMode || 'url'],
+        ['URL objetivo', entry.raw.targetUrl || entry.raw.startUrl || '-'],
         ['Estado final', entry.finalStatus ?? '-'],
         ['Con 301', entry.found301 ? 'SI' : 'no'],
         ['Cache HIT', entry.foundCacheHit ? 'SI' : 'no'],
@@ -902,6 +904,11 @@
         ['URL final', entry.finalUrl || '-'],
         ['Error', entry.error || '-'],
       ];
+
+      if (entry.raw.sitemap) {
+        const s = entry.raw.sitemap;
+        fields.push(['Sitemap', `${s.sourceType || '-'} | ${s.source || '-'} | ${s.totalUrls || 0} urls | idx ${Number(s.selectedIndex || 0) + 1}`]);
+      }
 
       detailGrid.innerHTML = fields.map(([k, v]) => (
         '<div class="details-item"><div class="k">' + escapeHtml(k) + '</div><div class="mono">' + escapeHtml(v) + '</div></div>'

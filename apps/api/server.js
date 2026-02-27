@@ -87,7 +87,7 @@ function parseBodyJson(req) {
     let data = '';
     req.on('data', (chunk) => {
       data += chunk;
-      if (data.length > 1_000_000) {
+      if (data.length > 10_000_000) {
         reject(new Error('Body demasiado grande'));
         req.destroy();
       }
@@ -128,7 +128,7 @@ function listTools() {
     {
       id: 'redirect-monitor',
       name: 'Monitor redirecciones 301',
-      description: 'Comprueba periodicamente una URL y registra redirecciones/caches/errores.',
+      description: 'Comprueba periodicamente una URL o un sitemap y registra redirecciones/caches/errores.',
       createJobEndpoint: '/api/redirect-monitor/jobs',
       webViewerPath: '/log-viewer.html',
     },
@@ -166,7 +166,7 @@ async function handleApi(req, res, pathname, query) {
   if (req.method === 'POST' && pathname === '/api/redirect-monitor/jobs') {
     try {
       const body = await parseBodyJson(req);
-      const job = monitorManager.createJob(body);
+      const job = await monitorManager.createJob(body);
       sendJson(res, 201, { job });
     } catch (error) {
       sendJson(res, 400, { error: error.message });

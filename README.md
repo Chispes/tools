@@ -32,6 +32,7 @@ Abre:
 Desde esa web puedes:
 
 - crear jobs del monitor 301 con formulario
+- elegir modo objetivo: URL directa o sitemap (por URL o fichero XML/TXT)
 - elegir User-Agent (presets conocidos o personalizado)
 - parar jobs en ejecucion
 - abrir el log JSONL y el visor visual por cada job
@@ -80,6 +81,29 @@ Ejemplo body para crear job:
 }
 ```
 
+Ejemplo body con sitemap remoto:
+
+```json
+{
+  "sitemapUrl": "https://dominio.com/sitemap.xml",
+  "everyMs": 30000,
+  "timeoutMs": 15000,
+  "maxRedirects": 10
+}
+```
+
+Ejemplo body con sitemap por fichero (contenido en texto):
+
+```json
+{
+  "sitemapFileName": "sitemap.xml",
+  "sitemapContent": "<urlset>...</urlset>",
+  "everyMs": 30000,
+  "timeoutMs": 15000,
+  "maxRedirects": 10
+}
+```
+
 ## Despliegue en Plesk (Node.js)
 
 Configura la app Node con:
@@ -101,6 +125,18 @@ Puedes seguir usando terminal:
 
 ```bash
 node /Users/chispes/Workspace/tools/monitor-301.js -u "https://techy44.okdiario.com/" -e 30s --user-agent "Mozilla/5.0 (...)" -o runtime/logs/manual.jsonl
+```
+
+CLI con sitemap remoto (seleccion aleatoria por intento):
+
+```bash
+node /Users/chispes/Workspace/tools/monitor-301.js --sitemap-url "https://dominio.com/sitemap.xml" -e 30s
+```
+
+CLI con sitemap local:
+
+```bash
+node /Users/chispes/Workspace/tools/monitor-301.js --sitemap-file "/ruta/sitemap.xml" -e 30s
 ```
 
 O directamente:

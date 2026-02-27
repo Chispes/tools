@@ -262,8 +262,24 @@
       <form id="jobForm">
         <div class="grid">
           <div>
+            <label for="targetMode">Modo objetivo</label>
+            <select id="targetMode" name="targetMode">
+              <option value="url">URL directa</option>
+              <option value="sitemap-url">Sitemap por URL</option>
+              <option value="sitemap-file">Sitemap por fichero XML/TXT</option>
+            </select>
+          </div>
+          <div id="fieldUrl">
             <label for="url">URL</label>
             <input id="url" name="url" type="url" required placeholder="https://techy44.okdiario.com/">
+          </div>
+          <div id="fieldSitemapUrl" style="display:none">
+            <label for="sitemapUrl">Sitemap URL</label>
+            <input id="sitemapUrl" name="sitemapUrl" type="url" placeholder="https://dominio.com/sitemap.xml">
+          </div>
+          <div id="fieldSitemapFile" style="display:none">
+            <label for="sitemapFile">Sitemap fichero</label>
+            <input id="sitemapFile" name="sitemapFile" type="file" accept=".xml,.txt,text/xml,text/plain,application/xml">
           </div>
           <div>
             <label for="everyMs">Intervalo (ms)</label>
@@ -310,7 +326,7 @@
             <tr>
               <th>ID</th>
               <th>Estado</th>
-              <th>URL</th>
+              <th>Objetivo</th>
               <th>Config</th>
               <th>Ultimo evento</th>
               <th>Log</th>
@@ -330,6 +346,13 @@
     const stats = document.getElementById('stats');
     const reloadJobsBtn = document.getElementById('reloadJobsBtn');
     const autoRefreshChk = document.getElementById('autoRefreshChk');
+    const targetMode = document.getElementById('targetMode');
+    const fieldUrl = document.getElementById('fieldUrl');
+    const fieldSitemapUrl = document.getElementById('fieldSitemapUrl');
+    const fieldSitemapFile = document.getElementById('fieldSitemapFile');
+    const urlInput = document.getElementById('url');
+    const sitemapUrlInput = document.getElementById('sitemapUrl');
+    const sitemapFileInput = document.getElementById('sitemapFile');
     const userAgentPreset = document.getElementById('userAgentPreset');
     const userAgentCustom = document.getElementById('userAgentCustom');
 
@@ -423,6 +446,25 @@
       syncUserAgentInputVisibility();
     }
 
+    function syncTargetMode() {
+      const mode = targetMode.value;
+      fieldUrl.style.display = mode === 'url' ? '' : 'none';
+      fieldSitemapUrl.style.display = mode === 'sitemap-url' ? '' : 'none';
+      fieldSitemapFile.style.display = mode === 'sitemap-file' ? '' : 'none';
+
+      urlInput.required = mode === 'url';
+      sitemapUrlInput.required = mode === 'sitemap-url';
+      sitemapFileInput.required = mode === 'sitemap-file';
+    }
+
+    function formatTarget(jobConfig) {
+      if (jobConfig.targetMode === 'sitemap') {
+        const count = Number(jobConfig.sitemapCount || 0);
+        return `sitemap (${count} urls) | ${jobConfig.sitemapSource || '-'}`;
+      }
+      return jobConfig.url || '-';
+    }
+
     function renderStats(jobs) {
       const running = jobs.filter((j) => j.status === 'running').length;
       const stopped = jobs.filter((j) => j.status === 'stopped').length;
@@ -448,16 +490,17 @@
         const lastInfo = !last
           ? '-'
           : (last.ok
-            ? ('Intento #' + last.attempt + ' | status=' + (last.finalStatus || '-') + ' | 301=' + (last.found301 ? 'SI' : 'no') + ' | cache=' + (last.foundCacheHit ? 'HIT' : 'no'))
+            ? ('Intento #' + last.attempt + ' | target=' + short(last.targetUrl || last.startUrl || '-', 40) + ' | status=' + (last.finalStatus || '-') + ' | 301=' + (last.found301 ? 'SI' : 'no') + ' | cache=' + (last.foundCacheHit ? 'HIT' : 'no'))
             : ('Intento #' + last.attempt + ' | ERROR: ' + short(last.error, 90))
           );
 
         const tr = document.createElement('tr');
+        const targetText = formatTarget(job.config);
         tr.innerHTML =
           '<td class="mono">' + escapeHtml(job.id) + '</td>' +
           '<td><span class="tag ' + escapeHtml(job.status) + '">' + escapeHtml(job.status) + '</span><br><small>' + escapeHtml(fmtDate(job.lastRunAt)) + '</small></td>' +
-          '<td class="mono" title="' + escapeHtml(job.config.url) + '">' + escapeHtml(short(job.config.url, 85)) + '</td>' +
-          '<td class="mono">every=' + job.config.everyMs + 'ms<br>timeout=' + job.config.timeoutMs + 'ms<br>maxR=' + job.config.maxRedirects + '<br>no-cache=' + (job.config.forceNoCache ? 'si' : 'no') + '<br>ua=' + escapeHtml(displayUserAgent(job.config.userAgent)) + '</td>' +
+          '<td class="mono" title="' + escapeHtml(targetText) + '">' + escapeHtml(short(targetText, 85)) + '</td>' +
+          '<td class="mono">mode=' + escapeHtml(job.config.targetMode || 'url') + '<br>every=' + job.config.everyMs + 'ms<br>timeout=' + job.config.timeoutMs + 'ms<br>maxR=' + job.config.maxRedirects + '<br>no-cache=' + (job.config.forceNoCache ? 'si' : 'no') + '<br>ua=' + escapeHtml(displayUserAgent(job.config.userAgent)) + '</td>' +
           '<td class="mono" title="' + escapeHtml(lastInfo) + '">' + escapeHtml(short(lastInfo, 115)) + '</td>' +
           '<td class="mono"><a href="' + escapeHtml(job.logUrl) + '" target="_blank" rel="noreferrer">jsonl</a><br><a href="/log-viewer.html?file=' + encodeURIComponent(job.logUrl) + '" target="_blank" rel="noreferrer">abrir viewer</a></td>' +
           '<td class="cell-actions"></td>';
@@ -517,7 +560,6 @@
       createStatus.textContent = 'Creando job...';
 
       const payload = {
-        url: document.getElementById('url').value.trim(),
         everyMs: Number(document.getElementById('everyMs').value),
         timeoutMs: Number(document.getElementById('timeoutMs').value),
         maxRedirects: Number(document.getElementById('maxRedirects').value),
@@ -525,6 +567,21 @@
         forceNoCache: document.getElementById('forceNoCache').checked,
         stopOn301: document.getElementById('stopOn301').checked,
       };
+
+      const mode = targetMode.value;
+      if (mode === 'url') {
+        payload.url = urlInput.value.trim();
+      } else if (mode === 'sitemap-url') {
+        payload.sitemapUrl = sitemapUrlInput.value.trim();
+      } else if (mode === 'sitemap-file') {
+        const file = sitemapFileInput.files && sitemapFileInput.files[0];
+        if (!file) {
+          createStatus.textContent = 'Selecciona un fichero sitemap.';
+          return;
+        }
+        payload.sitemapFileName = file.name;
+        payload.sitemapContent = await file.text();
+      }
 
       try {
         const data = await api('/api/redirect-monitor/jobs', {
@@ -551,6 +608,9 @@
     userAgentPreset.addEventListener('change', () => {
       syncUserAgentInputVisibility();
     });
+    targetMode.addEventListener('change', () => {
+      syncTargetMode();
+    });
 
     async function init() {
       try {
@@ -569,6 +629,7 @@
     });
 
     restartAutoRefresh();
+    syncTargetMode();
   </script>
 </body>
 </html>
