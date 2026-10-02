@@ -20,8 +20,9 @@ Primera herramienta implementada:
 
 ## Arrancar la web (formulario + monitor en vivo)
 
+Ejecuta `npm start` desde la raíz del repositorio:
+
 ```bash
-cd /Users/chispes/Workspace/tools
 npm start
 ```
 

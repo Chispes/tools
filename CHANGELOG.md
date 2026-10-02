@@ -21,6 +21,7 @@ All notable changes to this project will be documented in this file.
 - Log viewer events table now shows source URL and loaded/final URL in separate columns.
 
 ### Fixed
+- README web startup example now runs `npm start` from the repository root without a machine-specific path.
 - Timeline/latency chart hover no longer scales points, improving click stability.
 - Log viewer now supports a time-window selector (1h..7d/todo) and caps chart width to avoid unbounded horizontal scrolling on very large logs.
 
